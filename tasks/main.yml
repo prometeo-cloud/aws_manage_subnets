@@ -1,0 +1,17 @@
+---
+- name: Create Subnets
+  include_tasks: create_subnet.yml
+  with_items:
+    - "{{ aws_subnets }}"
+  loop_control:
+    loop_var: subnet
+  when: (arg_action is not defined) or (arg_action != 'delete')
+
+- name: Delete Subnets
+  include_tasks: delete_subnet.yml
+  with_items:
+    - "{{ aws_subnets }}"
+  loop_control:
+    loop_var: subnet
+  when: (arg_action is defined) and (arg_action == 'delete')
+...

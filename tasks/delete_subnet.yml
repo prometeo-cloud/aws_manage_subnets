@@ -1,0 +1,15 @@
+---
+- name: Get Subnet facts
+  include_role:
+    name: "aws_manage_subnets"
+    tasks_from: "get_subnet_facts"
+  vars:
+    subnet_tag: "{{ subnet.aws_vpc_subnet_name }}"
+
+- name: Remove subnet {{ subnet.aws_vpc_subnet_name }}
+  ec2_vpc_subnet:
+    state: absent
+    vpc_id: "{{ subnet_facts.subnets[0].vpc_id }}"
+    cidr: "{{ subnet_facts.subnets[0].cidr_block }}"
+  when: subnet_facts.subnets != []
+...

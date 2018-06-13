@@ -1,0 +1,35 @@
+---
+- name: Get Subnet facts
+  include_role:
+    name: "aws_manage_subnets"
+    tasks_from: "get_subnet_facts"
+  vars:
+    subnet_tag: "{{ subnet.aws_vpc_subnet_name }}"
+
+- block:
+    - name: Get VPC Information
+      include_role:
+        name: "aws_manage_vpc"
+        tasks_from: "get_vpc_facts"
+      vars:
+        vpc_tag: "{{ subnet.aws_vpc_tag }}"
+
+    - name: Set resource name
+      set_fact:
+        resource_name: "{{ subnet.aws_vpc_subnet_name | upper }}"
+
+    - name: Create VPC subnet {{ subnet.aws_vpc_subnet_name }}
+      ec2_vpc_subnet:
+        state: present
+        vpc_id: "{{ vpc_net_facts.vpcs[0].id }}"
+        cidr: "{{ subnet.aws_vpc_subnet_cidr }}"
+        resource_tags: "{{ subnet.aws_vpc_subnet_tags  }}"
+        az: "{{ subnet.aws_vpc_subnet_az }}"
+        wait: True
+        wait_timeout: 900
+      register: vpc_subnet
+
+    - name: Update Name tag value
+      command: "aws ec2 create-tags --resources {{ vpc_subnet.subnet.id }} --tags Key=\"Name\",Value=\"{{ subnet.aws_vpc_subnet_name | upper }}\""
+  when: subnet_facts.subnets == []
+...
